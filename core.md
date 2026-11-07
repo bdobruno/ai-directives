@@ -2,6 +2,9 @@
 
 These apply to every task, in every language.
 
+## Environment
+- Never read `.env` files.
+
 ## Requirements → tests
 - Align on the requirements with the user before implementing anything. List them, resolve ambiguities, and get confirmation.
 - Every requirement in the spec has a test or a group of tests linked to it.
