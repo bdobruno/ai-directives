@@ -4,6 +4,7 @@ These apply to every task, in every language.
 
 ## Environment
 - Never read `.env` files.
+- Don't edit files with `sed` or other shell commands. Use the inline edit tool so I can review and adjust each change.
 
 ## Requirements → tests
 - Align on the requirements with the user before implementing anything. List them, resolve ambiguities, and get confirmation.
