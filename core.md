@@ -8,6 +8,8 @@ These apply to every task, in every language.
 
 ## Requirements → tests
 - Align on the requirements with the user before implementing anything. List them, resolve ambiguities, and get confirmation.
+- Once the requirements are approved, write them to `spec.md`, split into vertical slices, with each slice listing its requirement IDs.
+- When a slice is implemented and its tests pass, remove it from `spec.md`. The spec only holds work that is still left to do.
 - Every requirement in the spec has a test or a group of tests linked to it.
 - Give each requirement an ID (e.g. `REQ-012`) and reference it in the test name or docstring, so the link can be found by searching for the ID.
 - A requirement with no linked test is not done. A test with no linked requirement must be justified or removed.
