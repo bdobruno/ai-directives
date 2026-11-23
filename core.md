@@ -51,23 +51,32 @@ These apply to every task, in every language.
 ## Module architecture
 - Dependency direction: app → capability → port ← adapter. Never import another module's internals; import only what a package exports.
 - A capability is a package with a pure core: inputs in, a Plan or Result out. The core does no I/O and never reads the clock, environment, or disk. Pass `now` and the like in.
-- The core defines its external dependencies as ports: an interface (a Protocol in Python, a trait in Rust, an interface in TypeScript), each as narrow as that capability needs.
+- The core defines its external dependencies as ports: interfaces it owns, each as narrow as that capability needs.
 - An adapter implements a port for one external system. There is one adapter per external system, shared by every capability. Adapters hold no business rules.
-- Translate external names and shapes in adapters only. Data crossing a module boundary has a named, typed contract (a dataclass, struct, or type), never a loose dict or tuple.
+- Translate external names and shapes in adapters only. Data crossing a module boundary has a named, typed contract (a record type), never a loose map or tuple.
 - Effects follow plan → apply. The core returns a plan, a list of typed operations. A separate step applies it through the ports. Dry run, logging, and tests inspect the plan.
 - Each capability has one orchestrator: read through the ports, build the plan with the core, apply it unless it's a dry run, return the plan. Test it with in-memory fakes of the ports.
 - Apps (flow, CLI, server) are composition roots: read config and secrets, build the adapters, call the orchestrators. No business logic.
 - Add new variants (objects, tables, sources, checks) through config, not new code paths. If adding a variant means editing code, the config is missing a field.
-- Enforce the rules with tooling in CI, not by review (import-linter for Python): ban I/O imports in the core and imports between capabilities.
+- Enforce the rules with tooling in CI, not by review: fail the build on I/O imports in the core and on imports between capabilities.
 
 ### Layout
+Under the language's usual source root:
 ```
 <app entry points>   composition roots, thin
 config/              variants: sources, tables, checks
-src/<capability>/    core · ports · run (the orchestrator)
-src/adapters/        one module per external system
-tests/               mirrors src/; core tests are pure, no mocks
+<capability>/        core · ports · run (the orchestrator)
+adapters/            one module per external system
+tests/               mirrors the source tree; core tests are pure, no mocks
 ```
+
+### Example: attaching screenshots to trades
+- Core: `plan(files, known_ids, base_url) → Plan`. Each file becomes `Upload(trade_id, path, key, url)` if its trade id is known, otherwise `Skip(path, reason)`. No I/O, so a test passes literals in and compares the plan.
+- Ports the core owns: `TradeCatalog.known(ids)`, `ObjectStore.put(key, path)`, `LinkStore.set_url(trade_id, url)`, `ImageFolder.list()`.
+- Adapters: one for the bucket, one for the database, one for the filesystem. The bucket's endpoint and the database's table names appear only there, and any other capability using those systems reuses them.
+- Orchestrator: `run(ports, dry_run)` lists the files, asks the catalog which ids exist, builds the plan, applies it (put the object, then set the link) unless it's a dry run, and returns the plan.
+- App: the `upload` command reads config and secrets, builds the three adapters, calls `run`, and prints the plan.
+- Variant: a second bucket or another kind of attachment is a config entry, not a new code path.
 
 ### Bringing an existing repo in line
 - Audit the repo against the rules above and write the gaps into `spec.md` as vertical slices with requirement IDs, per Requirements → tests.
