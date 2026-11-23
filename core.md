@@ -70,14 +70,6 @@ adapters/            one module per external system
 tests/               mirrors the source tree; core tests are pure, no mocks
 ```
 
-### Example: attaching screenshots to trades
-- Core: `plan(files, known_ids, base_url) → Plan`. Each file becomes `Upload(trade_id, path, key, url)` if its trade id is known, otherwise `Skip(path, reason)`. No I/O, so a test passes literals in and compares the plan.
-- Ports the core owns: `TradeCatalog.known(ids)`, `ObjectStore.put(key, path)`, `LinkStore.set_url(trade_id, url)`, `ImageFolder.list()`.
-- Adapters: one for the bucket, one for the database, one for the filesystem. The bucket's endpoint and the database's table names appear only there, and any other capability using those systems reuses them.
-- Orchestrator: `run(ports, dry_run)` lists the files, asks the catalog which ids exist, builds the plan, applies it (put the object, then set the link) unless it's a dry run, and returns the plan.
-- App: the `upload` command reads config and secrets, builds the three adapters, calls `run`, and prints the plan.
-- Variant: a second bucket or another kind of attachment is a config entry, not a new code path.
-
 ### Bringing an existing repo in line
 - Audit the repo against the rules above and write the gaps into `spec.md` as vertical slices with requirement IDs, per Requirements → tests.
 - One slice, one PR. Write the behavior that must not change as requirements too, each with a characterization test written before any code moves.
