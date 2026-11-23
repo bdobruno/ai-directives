@@ -58,7 +58,7 @@ These apply to every task, in every language.
 - Each capability has one orchestrator: read through the ports, build the plan with the core, apply it unless it's a dry run, return the plan. Test it with in-memory fakes of the ports.
 - Apps (flow, CLI, server) are composition roots: read config and secrets, build the adapters, call the orchestrators. No business logic.
 - Add new variants (objects, tables, sources, checks) through config, not new code paths. If adding a variant means editing code, the config is missing a field.
-- Enforce the rules with tooling in CI, not by review: fail the build on I/O imports in the core and on imports between capabilities.
+- CI must enforce this structure, not review. Every PR runs checks that fail the build on imports against the dependency direction, I/O imports in the core, imports between capabilities, and imports of another module's internals. Never merge on red.
 
 ### Layout
 Under the language's usual source root:
