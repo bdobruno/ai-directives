@@ -47,3 +47,28 @@ These apply to every task, in every language.
 - Larger flows compose orchestrators; they never call leaf functions directly.
 - Keep the layers strict: leaf → orchestrator → orchestrator of orchestrators. A layer only calls the layer directly below it.
 - The top-level entry point should read like a table of contents of the process.
+
+## Module architecture
+- Dependency direction: app → capability → port ← adapter. Never import another module's internals; import only what a package exports.
+- A capability is a package with a pure core: inputs in, a Plan or Result out. The core does no I/O and never reads the clock, environment, or disk. Pass `now` and the like in.
+- The core defines its external dependencies as ports: an interface (a Protocol in Python, a trait in Rust, an interface in TypeScript), each as narrow as that capability needs.
+- An adapter implements a port for one external system. There is one adapter per external system, shared by every capability. Adapters hold no business rules.
+- Translate external names and shapes in adapters only. Data crossing a module boundary has a named, typed contract (a dataclass, struct, or type), never a loose dict or tuple.
+- Effects follow plan → apply. The core returns a plan, a list of typed operations. A separate step applies it through the ports. Dry run, logging, and tests inspect the plan.
+- Each capability has one orchestrator: read through the ports, build the plan with the core, apply it unless it's a dry run, return the plan. Test it with in-memory fakes of the ports.
+- Apps (flow, CLI, server) are composition roots: read config and secrets, build the adapters, call the orchestrators. No business logic.
+- Add new variants (objects, tables, sources, checks) through config, not new code paths. If adding a variant means editing code, the config is missing a field.
+- Enforce the rules with tooling in CI, not by review (import-linter for Python): ban I/O imports in the core and imports between capabilities.
+
+### Layout
+```
+<app entry points>   composition roots, thin
+config/              variants: sources, tables, checks
+src/<capability>/    core · ports · run (the orchestrator)
+src/adapters/        one module per external system
+tests/               mirrors src/; core tests are pure, no mocks
+```
+
+### Bringing an existing repo in line
+- Audit the repo against the rules above and write the gaps into `spec.md` as vertical slices with requirement IDs, per Requirements → tests.
+- One slice, one PR. Write the behavior that must not change as requirements too, each with a characterization test written before any code moves.
