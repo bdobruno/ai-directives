@@ -4,7 +4,7 @@ A directory of AI skills, plus core coding directives that apply to every repo.
 
 ## Core
 
-`core.md` holds the always-on directives: requirements → tests, TDD, small testable functions, and orchestrator layers.
+`core.md` holds the always-on directives: requirements → tests, TDD, small testable functions, orchestrator layers, and module architecture.
 
 ## Skills
 
