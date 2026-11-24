@@ -32,15 +32,20 @@ These apply to every task, in every language.
 - Never mock your own modules or internal collaborators.
 - Pass external dependencies in (dependency injection) rather than creating them inside the function.
 - Wrap external services in specific functions per operation (`getUser`, `createOrder`), not one generic `fetch(endpoint, options)`, so each mock returns one shape.
+- Test orchestrators with in-memory fakes of the ports, not mocks.
+
+## Two ideas, two jobs
+- **Functional core, imperative shell** is how code connects to the outside world. Decisions live in a pure core (values in, values out). Anything that touches another system (network, disk, clock, environment) lives in the shell, behind ports and adapters.
+- **Leaves and orchestrators** is how code is organised, in every layer. A leaf does one small thing. An orchestrator only sequences leaves. They say nothing about I/O.
+- They combine without overlapping. Leaves in a core are pure. Leaves in an adapter make exactly one external call. Orchestrators sequence leaves and reach the outside only through ports.
 
 ## Small, testable functions
 - One function, one responsibility. Aim for ~30 lines or fewer.
-- Leaf functions are pure where possible: inputs in, output out, no I/O, no hidden state.
-- Leaf functions get fast tests with no mocks.
+- A leaf does one thing. Core leaves are pure (inputs in, output out, no I/O, no hidden state) and get fast tests with no mocks. Adapter leaves make one external call each.
 
 ## Orchestrators
 - Each major process has exactly one orchestrator.
-- An orchestrator only sequences calls to leaf functions and handles I/O, errors, and logging. It contains no business logic of its own.
+- An orchestrator only sequences calls to leaf functions and handles errors and logging. It contains no business logic of its own. I/O happens in adapter leaves, reached through ports.
 - Orchestrators are covered by integration tests, mocking only at system boundaries.
 
 ## Orchestrators of orchestrators
