@@ -75,6 +75,27 @@ adapters/            one module per external system
 tests/               mirrors the source tree; core tests are pure, no mocks
 ```
 
+### Worked example
+A `payouts` capability. File extensions depend on the language.
+```
+src/
+  app/                  composition roots: build the adapters, call the orchestrators
+    cli
+  config/               variants: commission plans, rules per team
+  payouts/              one capability
+    core                pure decisions: calculate_payout, release_pct
+    ports               what it needs from outside: InvoiceSource, PayoutStore
+    run                 the orchestrator: read via ports, call core, apply the plan
+  adapters/             one module per external system
+    billing_api         implements InvoiceSource
+    payout_db           implements PayoutStore
+tests/                  mirrors src/
+  payouts/test_core     pure, literal numbers, no mocks
+  payouts/test_run      orchestrator, with in-memory fakes of the ports
+  adapters/             integration tests against the real system
+```
+`cli` builds the adapters and passes them to `run`. `payouts` never imports `adapters`.
+
 ### Bringing an existing repo in line
 - Audit the repo against the rules above and write the gaps into `spec.md` as vertical slices with requirement IDs, per Requirements → tests.
 - One slice, one PR. Write the behavior that must not change as requirements too, each with a characterization test written before any code moves.
